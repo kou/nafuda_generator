@@ -1,66 +1,135 @@
 # -*- coding: utf-8 -*-
+
 require 'rubygems'
 require 'sinatra'
-require 'RMagick'
-require 'hpricot'
+require 'gdk_pixbuf2'
+require 'pango'
+require 'cairo'
+require 'stringio'
+require 'rexml/document'
 require 'open-uri'
-require 'RMagick'
-require 'hpricot'
-require 'open-uri'
-include Magick
+
+include ERB::Util
 
 get '/' do
   erb :index
 end
 
-def max_pt_per_px(width_px, string)
-  length = string.split(/\s/).map{|i| i.split(//u).size }.max
-  pt = (width_px / length).to_i
-  pt *= 2 if string =~ /\A[@\w\s]+\z/
-  return pt
+def make_surface(paper, format, output, &block)
+  case format
+  when "ps", "pdf", "svg"
+    Cairo.const_get("#{format.upcase}Surface").new(output, paper, &block)
+  when "png"
+    Cairo::ImageSurface.new(*paper.size) do |surface|
+      yield(surface)
+      surface.write_to_png(output)
+    end
+  else
+    raise Sinatra::NotFound
+  end
+end
+
+def make_layout(context, text, width, height)
+  layout = context.create_pango_layout
+  layout.text = text
+  layout.width = width * Pango::SCALE
+  font_description = Pango::FontDescription.new("Sans 12")
+  layout.font_description = font_description
+  yield(layout) if block_given?
+  prev_size = font_description.size
+  loop do
+    current_width, current_height = layout.pixel_size
+    if width < current_width or height < current_height
+      font_description.size = prev_size
+      layout.font_description = font_description
+      break
+    end
+    prev_size = font_description.size
+    font_description.size *= 1.05
+    layout.font_description = font_description
+  end
+  context.update_pango_layout(layout)
+  layout
+end
+
+def render_to_surface(surface, paper, info)
+  margin = paper.width * 0.03
+  image_width = image_height = paper.width * 0.3
+
+  context = Cairo::Context.new(surface)
+  context.set_source_color(:white)
+  context.paint
+
+  context.set_source_color(:black)
+
+  name = info[:user_real_name].gsub(/\s+/, "\n")
+  max_name_height = paper.height - image_height - margin * 3
+  layout = make_layout(context,
+                       name,
+                       paper.width - margin * 2,
+                       max_name_height) do |_layout|
+    _layout.alignment = Pango::Layout::ALIGN_CENTER
+    _layout.justify = true
+  end
+  context.move_to(margin, margin + (max_name_height - layout.pixel_size[1]) / 2)
+  context.show_pango_layout(layout)
+
+  layout = make_layout(context,
+                       "@#{info[:screen_name]}",
+                       paper.width - image_width - margin * 3,
+                       image_height)
+  context.move_to(margin, paper.height - layout.pixel_size[1] - margin)
+  context.show_pango_layout(layout)
+
+  profile_image_url = info[:profile_image_url].gsub(/_normal\.png\z/, '.png')
+  pixbuf = open(profile_image_url) do |image_file|
+    loader = Gdk::PixbufLoader.new
+    loader.last_write(image_file.read)
+    loader.pixbuf
+  end
+  context.save do
+    context.translate(paper.width - image_width - margin,
+                      paper.height - image_height - margin)
+    context.scale(image_width / pixbuf.width, image_height / pixbuf.height)
+    context.set_source_pixbuf(pixbuf, 0, 0)
+    context.paint
+  end
+
+  context.show_page
+end
+
+def user_info(user_name)
+  info = {}
+  open("http://twitter.com/users/#{u(user_name)}.xml") do |xml|
+    doc = REXML::Document.new(xml)
+    info[:screen_name] = doc.elements["/user/screen_name"].text
+    info[:user_real_name] = doc.elements["/user/name"].text
+    info[:profile_image_url] = doc.elements["/user/profile_image_url"].text
+  end
+  info
 end
 
 get "/:user" do
   begin
-    user_name = File.basename(params[:user])
-
-    width = 8.9 / 2.54 * 72
-    height = 9.8 / 2.54 * 72
-
-    canvas = ImageList.new
-    canvas.new_image(width, height)
-    canvas.border!(2, 2, "black")
-
-    draw = Draw.new do
-      self.fill = 'black'
-      self.stroke = 'transparent'
-      self.font = File.expand_path('./fonts/ipag.ttf')
+    user = File.basename(params[:user], ".*")
+    if /\.([a-z]+)\z/ =~ params[:user]
+      format = $1
+    else
+      format = "png"
     end
 
-    # Name
-    doc = Hpricot(open("http://twitter.com/#{user_name}"))
-    user_real_name = doc.search(".entry-author").search(".fn").innerHTML.to_s
-    draw.annotate(canvas, 0, 0, 10, 3, user_real_name.gsub(/\s/, "\n")) {
-      self.pointsize = max_pt_per_px(width - 20, user_real_name)
-      self.gravity = NorthWestGravity
-    }
+    width = 89
+    height = 98
+    paper = Cairo::Paper.new(width, height, "mm", "RubyKaigi")
+    paper.unit = "pt"
+    output = StringIO.new
 
-    # Twitter id
-    draw.annotate(canvas, 0, 0, 10, 10, "@#{user_name}") {
-      self.pointsize = max_pt_per_px(width - 20 - 72, "@#{user_name}")
-      self.gravity = SouthWestGravity
-    }
-
-    # Twitter Image
-    icon = ImageList.new("http://img.tweetimag.es/i/#{user_name}_b")
-    canvas.composite!(icon, SouthEastGravity, 10, 10, OverCompositeOp)
-    canvas.write("/tmp/#{user_name}.jpg")
-
-    # read
-    File.open("/tmp/#{user_name}.jpg") do |f|
-      content_type :jpg
-      f.read
+    make_surface(paper, format, output) do |surface|
+      render_to_surface(surface, paper, user_info(user))
     end
+
+    content_type format
+    output.string
   rescue
     raise Sinatra::NotFound
   end
