@@ -128,6 +128,10 @@ get "/:user" do
       render_to_surface(surface, paper, user_info(user))
     end
 
+    base_dir = File.expand_path(File.dirname(__FILE__))
+    File.open(File.join(base_dir, "public", "#{user}.#{format}"), "w") do |file|
+      file.print(output.string)
+    end
     content_type format
     output.string
   rescue
