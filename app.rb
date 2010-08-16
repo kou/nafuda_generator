@@ -126,13 +126,25 @@ def user_info(user_name)
 end
 
 def retrieve_user_info(user_name)
-  info = {}
-  open("http://twitter.com/users/#{u(user_name)}.xml") do |xml|
-    doc = REXML::Document.new(xml)
-    info[:screen_name] = doc.elements["/user/screen_name"].text
-    info[:user_real_name] = doc.elements["/user/name"].text
-    info[:profile_image_url] = doc.elements["/user/profile_image_url"].text
+  user_info_cache_dir = File.join(File.dirname(__FILE__), "var", "cache", "users")
+  raise Sinatra::NotFound if danger_path_component?(user_name)
+  user_info_cache = File.join(user_info_cache_dir, "#{user_name}.xml")
+  FileUtils.mkdir_p(user_info_cache_dir)
+  if File.exist?(user_info_cache)
+    xml_data = File.read(user_info_cache)
+  else
+    xml_data = open("http://twitter.com/users/#{u(user_name)}.xml") do |xml|
+      xml.read
+    end
+    File.open(user_info_cache, "w") do |xml|
+      xml.print(xml_data)
+    end
   end
+  info = {}
+  doc = REXML::Document.new(xml_data)
+  info[:screen_name] = doc.elements["/user/screen_name"].text
+  info[:user_real_name] = doc.elements["/user/name"].text
+  info[:profile_image_url] = doc.elements["/user/profile_image_url"].text
   info
 end
 
