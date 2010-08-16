@@ -96,8 +96,9 @@ def render_to_surface(surface, paper, info, font)
   context.move_to(margin, margin + (max_name_height - layout.pixel_size[1]) / 2)
   context.show_pango_layout(layout)
 
+  screen_name = info[:screen_name]
   layout = make_layout(context,
-                       "@#{info[:screen_name]}",
+                       "@#{screen_name}",
                        paper.width - image_width - margin * 3,
                        image_height,
                        font)
@@ -105,11 +106,14 @@ def render_to_surface(surface, paper, info, font)
   context.show_pango_layout(layout)
 
   profile_image_url = info[:profile_image_url].gsub(/_normal\.png\z/, '.png')
-  pixbuf = open(profile_image_url) do |image_file|
-    loader = Gdk::PixbufLoader.new
-    loader.last_write(image_file.read)
-    loader.pixbuf
+  image_data = cache_file("images", "#{screen_name}.png") do
+    open(profile_image_url) do |image_file|
+      image_file.read
+    end
   end
+  loader = Gdk::PixbufLoader.new
+  loader.last_write(image_data)
+  pixbuf = loader.pixbuf
   context.save do
     context.translate(paper.width - image_width - margin,
                       paper.height - image_height - margin)
@@ -126,18 +130,9 @@ def user_info(user_name)
 end
 
 def retrieve_user_info(user_name)
-  user_info_cache_dir = File.join(File.dirname(__FILE__), "var", "cache", "users")
-  raise Sinatra::NotFound if danger_path_component?(user_name)
-  user_info_cache = File.join(user_info_cache_dir, "#{user_name}.xml")
-  FileUtils.mkdir_p(user_info_cache_dir)
-  if File.exist?(user_info_cache)
-    xml_data = File.read(user_info_cache)
-  else
-    xml_data = open("http://twitter.com/users/#{u(user_name)}.xml") do |xml|
+  xml_data = cache_file("users", user_name) do
+    open("http://twitter.com/users/#{u(user_name)}.xml") do |xml|
       xml.read
-    end
-    File.open(user_info_cache, "w") do |xml|
-      xml.print(xml_data)
     end
   end
   info = {}
@@ -167,12 +162,33 @@ def danger_path_component?(component)
   component == ".." or /\// =~ component
 end
 
-def cache_file(data, *path)
+def cache_file(*path)
+  if path.any? {|component| danger_path_component?(component)}
+    yield
+  else
+    base_dir = File.expand_path(File.dirname(__FILE__))
+    cache_path = File.join(base_dir, "var", "cache", *path)
+    if File.exist?(cache_path)
+      File.open(cache_path, "rb") do |file|
+        file.read
+      end
+    else
+      FileUtils.mkdir_p(File.dirname(cache_path))
+      data = yield
+      File.open(cache_path, "wb") do |file|
+        file.print(data)
+      end
+      data
+    end
+  end
+end
+
+def cache_public_file(data, *path)
   return if path.any? {|component| danger_path_component?(component)}
   base_dir = File.expand_path(File.dirname(__FILE__))
   path = File.join(base_dir, "public", *path)
   FileUtils.mkdir_p(File.dirname(path))
-  File.open(path, "w") do |file|
+  File.open(path, "wb") do |file|
     file.print(data)
   end
 end
@@ -192,7 +208,8 @@ get "/fonts/:font/thumbnails/:user.png" do
     format = "png"
 
     nameplate = render_nameplate(user, font, format, 0.3)
-    cache_file(nameplate, "fonts", font, "thumbnails", "#{user}.#{format}")
+    cache_public_file(nameplate,
+                      "fonts", font, "thumbnails", "#{user}.#{format}")
     nameplate
   rescue
     raise Sinatra::NotFound
@@ -210,7 +227,7 @@ get "/fonts/:font/:user" do
     end
 
     nameplate = render_nameplate(user, font, format)
-    cache_file(nameplate, "fonts", font, "#{user}.#{format}")
+    cache_public_file(nameplate, "fonts", font, "#{user}.#{format}")
     nameplate
   rescue
     raise Sinatra::NotFound
@@ -235,7 +252,7 @@ get "/:user" do
     end
 
     nameplate = render_nameplate(user, "Sans", format)
-    cache_file(nameplate, "#{user}.#{format}")
+    cache_putblic_file(nameplate, "#{user}.#{format}")
     nameplate
   rescue
     raise Sinatra::NotFound
