@@ -1,0 +1,42 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<title>名札には名前を大きく書きましょうジェネレータ</title>
+		<style>
+div.thumbnail
+{
+	float: left;
+	text-align: center;
+	width: 80px;
+	height: 250px;
+}
+
+a img
+{
+	border-style: none;
+}
+
+hr
+{
+	clear: both;
+}
+		</style>
+	</head>
+	<body>
+		<h1><%= h(@user) %></h1>
+<% @families.each do |name| %>
+		<div class="thumbnail">
+			<div>
+				<a href="fonts/<%= u(name) %>/<%= h(@user) %>.png">
+					<img src="fonts/<%= u(name) %>/thumbnails/<%= h(@user) %>.png" />
+				</a>
+			</div>
+			<div><a href="fonts/<%= u(name) %>/<%= h(@user) %>.pdf">PDF</a></div>
+			<p><%= h(name) %></p>
+		</div>
+<% end %>
+		<hr />
+		<a href="http://twitter.com/kdmsnr" target="_blank">@kdmsnr</a> and
+		<a href="http://twitter.com/ktou" target="_blank">@ktou</a>.
+	</body>
+</html>

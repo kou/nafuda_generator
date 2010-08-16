@@ -8,6 +8,7 @@ require 'cairo'
 require 'stringio'
 require 'rexml/document'
 require 'open-uri'
+require 'fileutils'
 
 include ERB::Util
 
@@ -29,11 +30,16 @@ def make_surface(paper, format, output, &block)
   end
 end
 
-def make_layout(context, text, width, height)
+def make_layout(context, text, width, height, font)
   layout = context.create_pango_layout
   layout.text = text
   layout.width = width * Pango::SCALE
-  font_description = Pango::FontDescription.new("Sans 12")
+  unless layout.context.families.any? {|family| family.name == font}
+    raise Sinatra::NotFound
+  end
+  font_description = Pango::FontDescription.new
+  font_description.family = font
+  font_description.size = 6 * Pango::SCALE
   layout.font_description = font_description
   yield(layout) if block_given?
   prev_size = font_description.size
@@ -52,7 +58,7 @@ def make_layout(context, text, width, height)
   layout
 end
 
-def render_to_surface(surface, paper, info)
+def render_to_surface(surface, paper, info, font)
   margin = paper.width * 0.03
   image_width = image_height = paper.width * 0.3
 
@@ -67,7 +73,8 @@ def render_to_surface(surface, paper, info)
   layout = make_layout(context,
                        name,
                        paper.width - margin * 2,
-                       max_name_height) do |_layout|
+                       max_name_height,
+                       font) do |_layout|
     _layout.alignment = Pango::Layout::ALIGN_CENTER
     _layout.justify = true
   end
@@ -77,7 +84,8 @@ def render_to_surface(surface, paper, info)
   layout = make_layout(context,
                        "@#{info[:screen_name]}",
                        paper.width - image_width - margin * 3,
-                       image_height)
+                       image_height,
+                       font)
   context.move_to(margin, paper.height - layout.pixel_size[1] - margin)
   context.show_pango_layout(layout)
 
@@ -98,7 +106,18 @@ def render_to_surface(surface, paper, info)
   context.show_page
 end
 
+@@user_info_cache = {
+  "kdmsnr" => {
+    :screen_name => "kdmsnr",
+    :user_real_name => "角公則",
+    :profile_image_url => "/home/kou/work/rd/RubyKaigi2010/ruby.png",
+  },
+}
 def user_info(user_name)
+  @@user_info_cache[user_name] || retrieve_user_info(user_name)
+end
+
+def retrieve_user_info(user_name)
   info = {}
   open("http://twitter.com/users/#{u(user_name)}.xml") do |xml|
     doc = REXML::Document.new(xml)
@@ -109,7 +128,50 @@ def user_info(user_name)
   info
 end
 
-get "/:user" do
+def render_nameplate(user, font, format, scale=1.0)
+  width = 89
+  height = 98
+  paper = Cairo::Paper.new(width * scale, height * scale, "mm", "RubyKaigi")
+  paper.unit = "pt"
+  output = StringIO.new
+
+  make_surface(paper, format, output) do |surface|
+    render_to_surface(surface, paper, user_info(user), font)
+  end
+
+  content_type format
+  output.string
+end
+
+def danger_path_component?(component)
+  component == ".." or /\// =~ component
+end
+
+def cache_file(data, *path)
+  return if path.any? {|component| danger_path_component?(component)}
+  base_dir = File.expand_path(File.dirname(__FILE__))
+  path = File.join(base_dir, "public", *path)
+  FileUtils.mkdir_p(File.dirname(path))
+  File.open(path, "w") do |file|
+    file.print(data)
+  end
+end
+
+get "/fonts/:font/thumbnails/:user.png" do
+  begin
+    user = File.basename(params[:user])
+    font = params[:font]
+    format = "png"
+
+    nameplate = render_nameplate(user, font, format, 0.3)
+    cache_file(nameplate, "fonts", font, "thumbnail", "#{user}.#{format}")
+    nameplate
+  rescue
+    raise Sinatra::NotFound
+  end
+end
+
+get "/fonts/:font/:user" do
   begin
     user = File.basename(params[:user], ".*")
     if /\.([a-z]+)\z/ =~ params[:user]
@@ -117,23 +179,32 @@ get "/:user" do
     else
       format = "png"
     end
+    font = params[:font]
 
-    width = 89
-    height = 98
-    paper = Cairo::Paper.new(width, height, "mm", "RubyKaigi")
-    paper.unit = "pt"
-    output = StringIO.new
+    nameplate = render_nameplate(user, font, format)
+    cache_file(nameplate, "fonts", font, "#{user}.#{format}")
+    nameplate
+  rescue
+    raise Sinatra::NotFound
+  end
+end
 
-    make_surface(paper, format, output) do |surface|
-      render_to_surface(surface, paper, user_info(user))
+get "/:user" do
+  begin
+    user = File.basename(params[:user], ".*")
+    if /\.([a-z]+)\z/ =~ params[:user]
+      format = $1
+    else
+      @user = user
+      context = Cairo::Context.new(Cairo::ImageSurface.new(1, 1))
+      @families = context.create_pango_layout.context.families
+      @families = @families.collect(&:name).sort_by {rand}[0..50].sort
+      return erb :user
     end
 
-    base_dir = File.expand_path(File.dirname(__FILE__))
-    File.open(File.join(base_dir, "public", "#{user}.#{format}"), "w") do |file|
-      file.print(output.string)
-    end
-    content_type format
-    output.string
+    nameplate = render_nameplate(user, "Sans", format)
+    cache_file(nameplate, "#{user}.#{format}")
+    nameplate
   rescue
     raise Sinatra::NotFound
   end
