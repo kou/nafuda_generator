@@ -180,7 +180,7 @@ get "/fonts/:font/thumbnails/:user.png" do
     format = "png"
 
     nameplate = render_nameplate(user, font, format, 0.3)
-    cache_file(nameplate, "fonts", font, "thumbnail", "#{user}.#{format}")
+    cache_file(nameplate, "fonts", font, "thumbnails", "#{user}.#{format}")
     nameplate
   rescue
     raise Sinatra::NotFound
