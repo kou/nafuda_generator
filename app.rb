@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+ENV["LANG"] = "ja_JP.UTF-8"
+
 require 'rubygems'
 require 'sinatra'
 require 'gdk_pixbuf2'
@@ -14,6 +16,10 @@ include ERB::Util
 
 get '/' do
   erb :index
+end
+
+post '/' do
+  redirect "/#{params[:user]}"
 end
 
 cairo_context = Cairo::Context.new(Cairo::ImageSurface.new(1, 1))

@@ -7,7 +7,7 @@ div.thumbnail
 {
 	float: left;
 	text-align: center;
-	width: 80px;
+	width: 150px;
 	height: 250px;
 }
 
@@ -23,7 +23,8 @@ hr
 		</style>
 	</head>
 	<body>
-		<h1><%= h(@user) %></h1>
+		<h1><a href="/">名札には名前を大きく書きましょうジェネレータ</a></h1>
+		<h2><%= h(@user) %></h2>
 <% @families.each do |name| %>
 		<div class="thumbnail">
 			<div>
@@ -37,6 +38,7 @@ hr
 <% end %>
 		<hr />
 		<a href="http://twitter.com/kdmsnr" target="_blank">@kdmsnr</a> and
-		<a href="http://twitter.com/ktou" target="_blank">@ktou</a>.
+		<a href="http://twitter.com/ktou" target="_blank">@ktou</a>.<br />
+		<a href="http://github.com/kou/nafuda_generator/">http://github.com/kou/nafuda_generator/</a>
 	</body>
 </html>
