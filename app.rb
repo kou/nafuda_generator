@@ -130,7 +130,7 @@ def user_info(user_name)
 end
 
 def retrieve_user_info(user_name)
-  xml_data = cache_file("users", user_name) do
+  xml_data = cache_file("users", "#{user_name}.xml") do
     open("http://twitter.com/users/#{u(user_name)}.xml") do |xml|
       xml.read
     end
