@@ -197,8 +197,11 @@ get "/:user" do
     else
       @user = user
       context = Cairo::Context.new(Cairo::ImageSurface.new(1, 1))
-      @families = context.create_pango_layout.context.families
-      @families = @families.collect(&:name).sort_by {rand}[0..50].sort
+      @families = context.create_pango_layout.context.families.collect do |family|
+        name = family.name
+        name.force_encoding("UTF-8") if name.respond_to?(:force_encoding)
+        name
+      end.sort_by {rand}[0..50].sort
       return erb :user
     end
 
