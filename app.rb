@@ -16,6 +16,15 @@ get '/' do
   erb :index
 end
 
+cairo_context = Cairo::Context.new(Cairo::ImageSurface.new(1, 1))
+pango_layout = cairo_context.create_pango_layout
+@@font_families = pango_layout.context.families.collect do |family|
+  name = family.name
+  name.force_encoding("UTF-8") if name.respond_to?(:force_encoding)
+  name
+end
+@@user_info_cache = {}
+
 def make_surface(paper, format, output, &block)
   case format
   when "ps", "pdf", "svg"
@@ -34,7 +43,7 @@ def make_layout(context, text, width, height, font)
   layout = context.create_pango_layout
   layout.text = text
   layout.width = width * Pango::SCALE
-  unless layout.context.families.any? {|family| family.name == font}
+  unless @@font_families.any? {|family| family == font}
     raise Sinatra::NotFound
   end
   font_description = Pango::FontDescription.new
@@ -106,13 +115,6 @@ def render_to_surface(surface, paper, info, font)
   context.show_page
 end
 
-@@user_info_cache = {
-  "kdmsnr" => {
-    :screen_name => "kdmsnr",
-    :user_real_name => "角公則",
-    :profile_image_url => "/home/kou/work/rd/RubyKaigi2010/ruby.png",
-  },
-}
 def user_info(user_name)
   @@user_info_cache[user_name] || retrieve_user_info(user_name)
 end
@@ -196,12 +198,7 @@ get "/:user" do
       format = $1
     else
       @user = user
-      context = Cairo::Context.new(Cairo::ImageSurface.new(1, 1))
-      @families = context.create_pango_layout.context.families.collect do |family|
-        name = family.name
-        name.force_encoding("UTF-8") if name.respond_to?(:force_encoding)
-        name
-      end.sort_by {rand}[0..50].sort
+      @families = @@font_families.sort_by {rand}[0..50].sort
       return erb :user
     end
 
