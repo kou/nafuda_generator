@@ -25,16 +25,24 @@ hr
 	<body>
 		<h1><a href="/">名札には名前を大きく書きましょうジェネレータ</a></h1>
 		<h2><%= h(@user) %></h2>
-<% @families.each do |name| %>
-		<div class="thumbnail">
-			<div>
-				<a href="fonts/<%= u(name) %>/<%= h(@user) %>.png">
-					<img src="fonts/<%= u(name) %>/thumbnails/<%= h(@user) %>.png" />
-				</a>
-			</div>
-			<div><a href="fonts/<%= u(name) %>/<%= h(@user) %>.pdf">PDF</a></div>
-			<p><%= h(name) %></p>
+		<div id="thumbnails">
 		</div>
+<% @families.each_with_index do |name, i| %>
+<script>
+function thumbnail_<%= i %>() {
+	document.getElementById("thumbnails").innerHTML +=
+		'<div class="thumbnail">' +
+		'	<div>' +
+		'		<a href="fonts/<%= u(name) %>/<%= h(@user) %>.png">' +
+		'			<img src="fonts/<%= u(name) %>/thumbnails/<%= h(@user) %>.png" />' +
+		'		</a>' +
+		'	</div>' +
+		'	<div><a href="fonts/<%= u(name) %>/<%= h(@user) %>.pdf">PDF</a></div>' +
+		'	<p><%= h(name) %></p>' +
+		'</div>';
+}
+setTimeout(thumbnail_<%= i %>, <%= 1000 * i %>);
+</script>
 <% end %>
 		<hr />
 		<a href="http://twitter.com/kdmsnr" target="_blank">@kdmsnr</a> and
