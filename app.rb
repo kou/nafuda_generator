@@ -159,10 +159,18 @@ def cache_file(data, *path)
   end
 end
 
+def prepare_font_name(name)
+  if name.respond_to?(:force_encoding)
+    name.force_encoding("UTF-8")
+    raise Sintara::NotFound unless name.valid_encoding?
+  end
+  name
+end
+
 get "/fonts/:font/thumbnails/:user.png" do
   begin
     user = File.basename(params[:user])
-    font = params[:font]
+    font = prepare_font_name(params[:font])
     format = "png"
 
     nameplate = render_nameplate(user, font, format, 0.3)
@@ -176,12 +184,12 @@ end
 get "/fonts/:font/:user" do
   begin
     user = File.basename(params[:user], ".*")
+    font = prepare_font_name(params[:font])
     if /\.([a-z]+)\z/ =~ params[:user]
       format = $1
     else
       format = "png"
     end
-    font = params[:font]
 
     nameplate = render_nameplate(user, font, format)
     cache_file(nameplate, "fonts", font, "#{user}.#{format}")
@@ -198,7 +206,13 @@ get "/:user" do
       format = $1
     else
       @user = user
-      @families = @@font_families.sort_by {rand}[0..50].sort
+      @families = @@font_families.sort_by {rand}[0..50].sort.collect do |name|
+        if name.respond_to?(:force_encoding)
+          name.dup.force_encoding("ASCII-8BIT")
+        else
+          name
+        end
+      end
       return erb :user
     end
 
