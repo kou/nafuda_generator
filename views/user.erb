@@ -37,7 +37,11 @@ function thumbnail_<%= i %>() {
 		'			<img src="fonts/<%= u(name) %>/thumbnails/<%= h(@user) %>.png" />' +
 		'		</a>' +
 		'	</div>' +
-		'	<div><a href="fonts/<%= u(name) %>/<%= h(@user) %>.pdf">PDF</a></div>' +
+		'	<div>' +
+		'		<a href="fonts/<%= u(name) %>/<%= h(@user) %>.pdf">PDF</a>' +
+		'		|' +
+		'		<a href="fonts/<%= u(name) %>/<%= h(@user) %>.svg">SVG</a>' +
+		'	</div>' +
 		'	<p><%= h(name) %></p>' +
 		'</div>';
 }
