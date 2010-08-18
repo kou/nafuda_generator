@@ -31,12 +31,14 @@ pango_layout = cairo_context.create_pango_layout
 end
 @@user_info_cache = {}
 
-def make_surface(paper, format, output, &block)
+def make_surface(paper, scale, format, output, &block)
+  width = paper.width * scale
+  height = paper.height * scale
   case format
   when "ps", "pdf", "svg"
-    Cairo.const_get("#{format.upcase}Surface").new(output, paper, &block)
+    Cairo.const_get("#{format.upcase}Surface").new(output, width, height, &block)
   when "png"
-    Cairo::ImageSurface.new(*paper.size) do |surface|
+    Cairo::ImageSurface.new(width, height) do |surface|
       yield(surface)
       surface.write_to_png(output)
     end
@@ -54,7 +56,7 @@ def make_layout(context, text, width, height, font)
   end
   font_description = Pango::FontDescription.new
   font_description.family = font
-  font_description.size = 6 * Pango::SCALE
+  font_description.size = 12 * Pango::SCALE
   layout.font_description = font_description
   yield(layout) if block_given?
   prev_size = font_description.size
@@ -73,11 +75,12 @@ def make_layout(context, text, width, height, font)
   layout
 end
 
-def render_to_surface(surface, paper, info, font)
+def render_to_surface(surface, scale, paper, info, font)
   margin = paper.width * 0.03
   image_width = image_height = paper.width * 0.3
 
   context = Cairo::Context.new(surface)
+  context.scale(scale, scale)
   context.set_source_color(:white)
   context.paint
 
@@ -146,12 +149,12 @@ end
 def render_nameplate(user, font, format, scale=1.0)
   width = 89
   height = 98
-  paper = Cairo::Paper.new(width * scale, height * scale, "mm", "RubyKaigi")
+  paper = Cairo::Paper.new(width, height, "mm", "RubyKaigi")
   paper.unit = "pt"
   output = StringIO.new
 
-  make_surface(paper, format, output) do |surface|
-    render_to_surface(surface, paper, user_info(user), font)
+  make_surface(paper, scale, format, output) do |surface|
+    render_to_surface(surface, scale, paper, user_info(user), font)
   end
 
   content_type format
