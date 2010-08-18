@@ -22,9 +22,7 @@ post '/' do
   redirect "/#{params[:user]}"
 end
 
-cairo_context = Cairo::Context.new(Cairo::ImageSurface.new(1, 1))
-pango_layout = cairo_context.create_pango_layout
-@@font_families = pango_layout.context.families.collect do |family|
+@@font_families = Pango::CairoFontMap.default.families.collect do |family|
   name = family.name
   name.force_encoding("UTF-8") if name.respond_to?(:force_encoding)
   name
