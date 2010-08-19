@@ -125,14 +125,15 @@ def render_to_surface(surface, scale, paper, info, font)
   context.move_to(margin, paper.height - layout.pixel_size[1] - margin)
   context.show_pango_layout(layout)
 
-  profile_image_url = info[:profile_image_url].gsub(/_normal\.png\z/, '.png')
-  image_data = cache_file("images", "#{screen_name}.png") do
-    open(profile_image_url) do |image_file|
+  profile_image_url = info[:profile_image_url].gsub(/_normal\.([a-z]+)\z/, '.\1')
+  extension = $1
+  image_data = cache_file("images", "#{screen_name}.#{extension}") do
+    open(profile_image_url, "rb") do |image_file|
       image_file.read
     end
   end
   loader = Gdk::PixbufLoader.new
-  loader.last_write(image_data)
+  loader.write(image_data)
   pixbuf = loader.pixbuf
   context.save do
     context.translate(paper.width - image_width - margin,
