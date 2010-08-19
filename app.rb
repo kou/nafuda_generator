@@ -79,10 +79,17 @@ def render_to_surface(surface, scale, paper, info, font)
 
   context = Cairo::Context.new(surface)
   context.scale(scale, scale)
+
   context.set_source_color(:white)
   context.paint
 
   context.set_source_color(:black)
+
+  context.save do
+    context.line_width = margin * 0.5
+    context.rectangle(0, 0, paper.width, paper.height)
+    context.stroke
+  end
 
   name = info[:user_real_name].gsub(/\s+/, "\n")
   max_name_height = paper.height - image_height - margin * 3
