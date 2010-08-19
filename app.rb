@@ -73,6 +73,18 @@ def make_layout(context, text, width, height, font)
   layout
 end
 
+def prepare_real_name(name)
+  name = name.strip
+  case name
+  when /\(/
+    name.gsub(/\s*\(/, "\n(")
+  when /\//
+    name.gsub(/\s*\/+\s*/, "\n")
+  else
+    name.gsub(/\s+/, "\n")
+  end
+end
+
 def render_to_surface(surface, scale, paper, info, font)
   margin = paper.width * 0.03
   image_width = image_height = paper.width * 0.3
@@ -91,7 +103,7 @@ def render_to_surface(surface, scale, paper, info, font)
     context.stroke
   end
 
-  name = info[:user_real_name].gsub(/\s+/, "\n")
+  name = prepare_real_name(info[:user_real_name])
   max_name_height = paper.height - image_height - margin * 3
   layout = make_layout(context,
                        name,
