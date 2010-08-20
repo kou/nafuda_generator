@@ -263,7 +263,7 @@ get "/:user" do
       format = $1
     else
       @user = user
-      @families = @@font_families.sort_by {rand}[0..50].collect do |name|
+      @families = @@font_families.sort_by {rand}[0, 50].collect do |name|
         if name.respond_to?(:force_encoding)
           name.dup.force_encoding("ASCII-8BIT")
         else
