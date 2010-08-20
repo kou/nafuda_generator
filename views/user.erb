@@ -25,6 +25,13 @@ hr
 	<body>
 		<h1><a href="/">名札には名前を大きく書きましょうジェネレータ</a></h1>
 		<h2><%= h(@user) %></h2>
+                <p>
+                        <form action="./" method="post">
+                                twitter ID:
+                                <input type="text" name="user" />
+                                <input type="submit" value="生成！" />
+                        </form>
+                </p>
 		<div id="thumbnails">
 		</div>
 <% @families.each_with_index do |name, i| %>
