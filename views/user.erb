@@ -37,20 +37,22 @@ hr
 <% @families.each_with_index do |name, i| %>
 <script>
 function thumbnail_<%= i %>() {
-	document.getElementById("thumbnails").innerHTML +=
-		'<div class="thumbnail">' +
-		'	<div>' +
-		'		<a href="fonts/<%= u(name) %>/<%= h(@user) %>.png">' +
-		'			<img src="fonts/<%= u(name) %>/thumbnails/<%= h(@user) %>.png" />' +
-		'		</a>' +
-		'	</div>' +
-		'	<div>' +
-		'		<a href="fonts/<%= u(name) %>/<%= h(@user) %>.pdf">PDF</a>' +
-		'		|' +
-		'		<a href="fonts/<%= u(name) %>/<%= h(@user) %>.svg">SVG</a>' +
-		'	</div>' +
-		'	<p><%= h(name) %></p>' +
-		'</div>';
+	var thumbnails = document.getElementById("thumbnails");
+	var thumbnail = document.createElement("div");
+	thumbnail.setAttribute("class", "thumbnail");
+	thumbnail.innerHTML =
+		'<div>' +
+		'	<a href="fonts/<%= u(name) %>/<%= h(@user) %>.png">' +
+		'		<img src="fonts/<%= u(name) %>/thumbnails/<%= h(@user) %>.png" />' +
+		'	</a>' +
+		'</div>' +
+		'<div>' +
+		'	<a href="fonts/<%= u(name) %>/<%= h(@user) %>.pdf">PDF</a>' +
+		'	|' +
+		'	<a href="fonts/<%= u(name) %>/<%= h(@user) %>.svg">SVG</a>' +
+		'</div>' +
+		'<p><%= h(name) %></p>';
+	thumbnails.appendChild(thumbnail);
 }
 setTimeout(thumbnail_<%= i %>, <%= 1000 * i %>);
 </script>
