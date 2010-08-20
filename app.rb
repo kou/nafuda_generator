@@ -262,6 +262,7 @@ get "/:user" do
     if /\.([a-z]+)\z/ =~ params[:user]
       format = $1
     else
+      user_info(user)
       @user = user
       @families = @@font_families.sort_by {rand}[0, 50].collect do |name|
         if name.respond_to?(:force_encoding)
