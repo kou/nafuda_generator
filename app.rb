@@ -81,11 +81,7 @@ def prepare_real_name(name)
   when /\//
     name.gsub(/\s*\/+\s*/, "\n")
   else
-    encoding = nil
-    encoding = name.encoding if name.respond_to?(:encoding)
-    name = name.gsub(/[\s　]+/, "\n")
-    name.force_encoding = encoding if encoding
-    name
+    name.gsub(/\s+/, "\n")
   end
 end
 
