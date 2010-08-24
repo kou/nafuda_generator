@@ -81,7 +81,7 @@ def prepare_real_name(name)
   when /\//
     name.gsub(/\s*\/+\s*/, "\n")
   else
-    name.gsub(/\s+/, "\n")
+    name.gsub(/[\s　]+/, "\n")
   end
 end
 
