@@ -136,12 +136,14 @@ def render_to_surface(surface, scale, paper, info, font)
   loader = Gdk::PixbufLoader.new
   loader.write(image_data)
   pixbuf = loader.pixbuf
-  context.save do
-    context.translate(paper.width - image_width - margin,
-                      paper.height - image_height - margin)
-    context.scale(image_width / pixbuf.width, image_height / pixbuf.height)
-    context.set_source_pixbuf(pixbuf, 0, 0)
-    context.paint
+  if pixbuf
+    context.save do
+      context.translate(paper.width - image_width - margin,
+                        paper.height - image_height - margin)
+      context.scale(image_width / pixbuf.width, image_height / pixbuf.height)
+      context.set_source_pixbuf(pixbuf, 0, 0)
+      context.paint
+    end
   end
 
   context.show_page
