@@ -137,6 +137,7 @@ def render_to_surface(surface, scale, paper, info, font)
   end
   loader = Gdk::PixbufLoader.new
   loader.write(image_data)
+  loader.close
   pixbuf = loader.pixbuf
   if pixbuf
     context.save do
