@@ -127,8 +127,12 @@ def render_to_surface(surface, scale, paper, info, font)
   context.move_to(margin, paper.height - layout.pixel_size[1] - margin)
   context.show_pango_layout(layout)
 
-  profile_image_url = info[:profile_image_url].gsub(/_normal\.([a-zA-Z]+)\z/,
-                                                    '.\1')
+  *profile_image_url_components = info[:profile_image_url].split(/\//)
+  profile_image_last_component = profile_image_url_components.last
+  profile_image_url_components[-1] =
+    u(profile_image_last_component.gsub(/_normal\.([a-zA-Z]+)\z/, '.\1'))
+  profile_image_url = profile_image_url_components.join("/")
+
   extension = $1
   image_data = cache_file("images", "#{screen_name}.#{extension}") do
     open(profile_image_url, "rb") do |image_file|
