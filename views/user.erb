@@ -1,13 +1,31 @@
 <html>
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-		<title>名札には名前を大きく書きましょうジェネレータ</title>
+		<title><%= prefix %>名札には名前を大きく書きましょうジェネレータ</title>
 		<style>
+div.description
+{
+	line-height: 80%;
+}
+
+div.description em
+{
+	background-color: red;
+	border: 1px solid blue;
+}
+
+div.description img.sample
+{
+	float: left;
+	padding-right: 10px;
+}
+
 div.note
 {
 	font-size: smaller;
 	color: #ccc;
 	line-height: 80%;
+	clear: both;
 }
 
 div.thumbnail
@@ -30,7 +48,7 @@ hr
 		</style>
 	</head>
 	<body>
-		<h1><a href="/">名札には名前を大きく書きましょうジェネレータ</a></h1>
+		<h1><%= prefix %><a href="/">名札には名前を大きく書きましょうジェネレータ</a></h1>
 		<h2><%= h(@user) %></h2>
                 <p>
                         <form action="./" method="post">
@@ -39,6 +57,16 @@ hr
                                 <input type="submit" value="生成！" />
                         </form>
                 </p>
+<% if jigoku? %>
+		<div class="description">
+			<p><img class="sample" src="sample/jigoku.png" alt="地獄のサンプル" /></p>
+	                <p>名言にはTwitterの説明文を使います。Twitter側の情報は1日くらいキャッシュするので、説明文を変更してから生成してください。</p>
+			<p>空白を2文字入れたところで右側の名言と左側の名言が区切られます。</p>
+			<p>例: 「（カチャカチャカチャ…）<em>&nbsp;</em><em>&nbsp;</em>（ッターン！）」 </p>
+			<p>→ 右側の名言:「（カチャカチャカチャ…）」</p>
+			<p>→ 左側の名言:「（ッターン！）」</p>
+		</div>
+<% end %>
 		<div class="note">
 	                <p>注意: アカウント情報は1日くらいキャッシュしています。Twitter側の名前の変更やプロフィール画像の変更は1日くらい反映されません。</p>
 			<p>（キャッシュしないとすぐにTwitter側から情報を取ってこれなくなるのです。）</p>

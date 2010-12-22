@@ -26,6 +26,22 @@ def debug?
   @@configurations[:debug]
 end
 
+def rendering_mode
+  @@configurations[:rendering_mode]
+end
+
+def jigoku?
+  rendering_mode == :jigoku
+end
+
+def prefix
+  if jigoku?
+    "地獄の".force_encoding("ascii-8bit")
+  else
+    ""
+  end
+end
+
 get '/' do
   erb :index
 end
@@ -91,17 +107,19 @@ def make_layout(context, text, width, height, font)
   font_description.size = 12 * Pango::SCALE
   layout.font_description = font_description
   yield(layout) if block_given?
-  prev_size = font_description.size
-  loop do
-    current_width, current_height = layout.pixel_size
-    if width < current_width or height < current_height
-      font_description.size = prev_size
-      layout.font_description = font_description
-      break
-    end
+  if height
     prev_size = font_description.size
-    font_description.size *= 1.05
-    layout.font_description = font_description
+    loop do
+      current_width, current_height = layout.pixel_size
+      if width < current_width or height < current_height
+        font_description.size = prev_size
+        layout.font_description = font_description
+        break
+      end
+      prev_size = font_description.size
+      font_description.size *= 1.05
+      layout.font_description = font_description
+    end
   end
   context.update_pango_layout(layout)
   layout
@@ -202,27 +220,25 @@ def prepare_jigoku_description(description)
   end
 end
 
-def render_witticism(context, position, witticism,
-                     paper, margin, max_height, font)
+def render_witticism(context, position, witticism, paper, margin, font)
   layout = make_layout(context,
                        witticism,
-                       paper.width - margin * 2,
-                       max_height,
+                       paper.height - margin * 2,
+                       nil,
                        font) do |_layout|
     _layout.context.base_gravity = :east
+    description = _layout.font_description
+    description.size = 16 * Pango::SCALE
+    _layout.font_description = description
   end
-  description = layout.font_description
-  description.size = 20 * Pango::SCALE
-  layout.font_description = description
 
-  witticism_margin = margin * 2
   case position
   when :right
-    witticism_x = paper.width - witticism_margin
+    witticism_x = paper.width - margin * 2
   when :left
-    witticism_x = witticism_margin + layout.pixel_size[1]
+    witticism_x = margin * 2 + layout.pixel_size[1]
   end
-  witticism_y = witticism_margin
+  witticism_y = margin
   context.save do
     context.move_to(witticism_x, witticism_y)
     context.rotate(Math::PI / 2)
@@ -272,11 +288,8 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
 
   description = prepare_jigoku_description(info[:description])
   right_witticism, left_witticism, garbages = description.split(/\n\n/, 3)
-  max_height = paper.height - margin * 3
-  render_witticism(context, :right, right_witticism,
-                   paper, margin, max_height, font)
-  render_witticism(context, :left, left_witticism,
-                   paper, margin, max_height, font)
+  render_witticism(context, :right, right_witticism, paper, margin, font)
+  render_witticism(context, :left, left_witticism, paper, margin, font)
 
   screen_name = info[:screen_name]
   layout = make_layout(context,
@@ -293,7 +306,7 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
 end
 
 def render_to_surface(surface, scale, paper, info, font)
-  send("render_to_surface_#{@@configurations[:rendering_mode]}",
+  send("render_to_surface_#{rendering_mode}",
        surface, scale, paper, info, font)
 end
 
