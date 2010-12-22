@@ -18,7 +18,7 @@ include ERB::Util
 
 @@configurations = {
   :debug => false,
-  :rendering_mode => :big,
+  :rendering_mode => :jigoku,
 }
 @@configurations[:debug] = true if ENV["RACK_ENV"] == "development"
 
@@ -179,6 +179,115 @@ def render_to_surface_big(surface, scale, paper, info, font)
       context.paint
     end
   end
+
+  context.show_page
+end
+
+def prepare_jigoku_description(description)
+  description = description.strip
+  description.gsub(/(.)(\s+)(.)/) do |chunk|
+    previous_char = $1
+    spaces = $2
+    next_char = $3
+    if /\A[a-z\d]\z/i =~ previous_char and /\A[a-z\d]\z/i =~ next_char
+      chunk
+    else
+      if spaces.size == 1
+        new_lines = "\n"
+      else
+        new_lines = "\n\n"
+      end
+      "#{previous_char}#{new_lines}#{next_char}"
+    end
+  end
+end
+
+def render_witticism(context, position, witticism,
+                     paper, margin, max_height, font)
+  layout = make_layout(context,
+                       witticism,
+                       paper.width - margin * 2,
+                       max_height,
+                       font) do |_layout|
+    _layout.context.base_gravity = :east
+  end
+  description = layout.font_description
+  description.size = 20 * Pango::SCALE
+  layout.font_description = description
+
+  witticism_margin = margin * 2
+  case position
+  when :right
+    witticism_x = paper.width - witticism_margin
+  when :left
+    witticism_x = witticism_margin + layout.pixel_size[1]
+  end
+  witticism_y = witticism_margin
+  context.save do
+    context.move_to(witticism_x, witticism_y)
+    context.rotate(Math::PI / 2)
+    context.line_width = 10
+    context.set_source_color(:white)
+    context.pango_layout_path(layout)
+    context.stroke
+  end
+  context.save do
+    context.move_to(witticism_x, witticism_y)
+    context.rotate(Math::PI / 2)
+    context.show_pango_layout(layout)
+  end
+end
+
+def render_to_surface_jigoku(surface, scale, paper, info, font)
+  if paper.width > paper.height
+    margin = paper.height * 0.03
+  else
+    margin = paper.width * 0.03
+  end
+
+  context = make_context(surface, scale)
+
+  pixbuf = load_pixbuf(info)
+  if pixbuf
+    context.save do
+      x_ratio = paper.width / pixbuf.width.to_f
+      y_ratio = paper.height / pixbuf.height.to_f
+      if x_ratio > y_ratio
+        translate_x = (paper.width - pixbuf.width) / 2.0
+        translate_y = 0
+        x_ratio = y_ratio
+      else
+        translate_x = 0
+        translate_y = (paper.height - pixbuf.height) / 2.0
+        y_ratio = x_ratio
+      end
+      context.translate(translate_x, translate_y)
+      context.scale(x_ratio, y_ratio)
+      context.set_source_pixbuf(pixbuf, 0, 0)
+      context.paint
+    end
+  end
+
+  render_frame(context, paper, margin * 0.5)
+
+  description = prepare_jigoku_description(info[:description])
+  right_witticism, left_witticism, garbages = description.split(/\n\n/, 3)
+  max_height = paper.height - margin * 3
+  render_witticism(context, :right, right_witticism,
+                   paper, margin, max_height, font)
+  render_witticism(context, :left, left_witticism,
+                   paper, margin, max_height, font)
+
+  screen_name = info[:screen_name]
+  layout = make_layout(context,
+                       "@#{screen_name}",
+                       paper.width - margin * 2,
+                       paper.height * 0.1,
+                       font) do |_layout|
+    _layout.alignment = :center
+  end
+  context.move_to(margin, paper.height - layout.pixel_size[1] - margin)
+  context.show_pango_layout(layout)
 
   context.show_page
 end
