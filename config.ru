@@ -1,4 +1,7 @@
-#config.ru
-require './app'
-run Sinatra::Application
+# -*- ruby -*-
 
+require './app'
+
+# @@configurations[:rendering_mode] = :jigoku
+
+run Sinatra::Application

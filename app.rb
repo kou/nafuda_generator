@@ -18,7 +18,7 @@ include ERB::Util
 
 @@configurations = {
   :debug => false,
-  :rendering_mode => :jigoku,
+  :rendering_mode => :big,
 }
 @@configurations[:debug] = true if ENV["RACK_ENV"] == "development"
 
