@@ -292,11 +292,13 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
 
   screen_name_max_height = paper.height * 0.1
 
-  description = prepare_jigoku_description(info[:description])
+  description = prepare_jigoku_description(info[:description] || "")
   right_witticism, left_witticism, garbages = description.split(/\n\n/, 3)
   max_witticism_height = paper.height - screen_name_max_height - margin * 2
-  render_witticism(context, :right, right_witticism, paper,
-                   max_witticism_height, margin, font)
+  if right_witticism
+    render_witticism(context, :right, right_witticism, paper,
+                     max_witticism_height, margin, font)
+  end
   if left_witticism
     render_witticism(context, :left, left_witticism, paper,
                      max_witticism_height, margin, font)
