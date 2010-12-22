@@ -268,8 +268,6 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
   pixbuf = load_pixbuf(info)
   if pixbuf
     context.save do
-      x_ratio = (paper.width - 10) / pixbuf.width.to_f
-      y_ratio = (paper.height - 10) / pixbuf.height.to_f
       x_ratio = paper.width / pixbuf.width.to_f
       y_ratio = paper.height / pixbuf.height.to_f
       if x_ratio > y_ratio
