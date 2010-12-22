@@ -229,7 +229,7 @@ def render_witticism(context, position, witticism, paper,
                        font) do |_layout|
     _layout.context.base_gravity = :east
     description = _layout.font_description
-    description.size = 16 * Pango::SCALE
+    description.size = 14 * Pango::SCALE
     _layout.font_description = description
   end
 
@@ -290,21 +290,8 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
 
   render_frame(context, paper, margin * 0.5)
 
-  screen_name_max_height = paper.height * 0.1
-
-  description = prepare_jigoku_description(info[:description] || "")
-  right_witticism, left_witticism, garbages = description.split(/\n\n/, 3)
-  max_witticism_height = paper.height - screen_name_max_height - margin * 2
-  if right_witticism
-    render_witticism(context, :right, right_witticism, paper,
-                     max_witticism_height, margin, font)
-  end
-  if left_witticism
-    render_witticism(context, :left, left_witticism, paper,
-                     max_witticism_height, margin, font)
-  end
-
   screen_name = info[:screen_name]
+  screen_name_max_height = paper.height * 0.1
   layout = make_layout(context,
                        "@#{screen_name}",
                        paper.width - margin * 2,
@@ -325,6 +312,18 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
   context.save do
     context.move_to(screen_name_x, screen_name_y)
     context.show_pango_layout(layout)
+  end
+
+  description = prepare_jigoku_description(info[:description] || "")
+  right_witticism, left_witticism, garbages = description.split(/\n\n/, 3)
+  max_witticism_height = paper.height - margin * 2
+  if right_witticism
+    render_witticism(context, :right, right_witticism, paper,
+                     max_witticism_height, margin, font)
+  end
+  if left_witticism
+    render_witticism(context, :left, left_witticism, paper,
+                     max_witticism_height, margin, font)
   end
 
   context.show_page
