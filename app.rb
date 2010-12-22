@@ -35,11 +35,7 @@ def jigoku?
 end
 
 def prefix
-  if jigoku?
-    "地獄の".force_encoding("ascii-8bit")
-  else
-    ""
-  end
+  erb(:prefix).force_encoding("ascii-8bit")
 end
 
 def description
