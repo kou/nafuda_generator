@@ -35,7 +35,7 @@ def jigoku?
 end
 
 def prefix
-  erb(:prefix).strip.force_encoding("ascii-8bit")
+  erb(:prefix).force_encoding("ascii-8bit").strip
 end
 
 def description
