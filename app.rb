@@ -232,6 +232,7 @@ def cache_file(*path)
 end
 
 def cache_public_file(data, *path)
+  return if debug?
   return if path.any? {|component| danger_path_component?(component)}
   base_dir = File.expand_path(File.dirname(__FILE__))
   path = File.join(base_dir, "public", *path)
