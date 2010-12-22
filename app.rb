@@ -200,6 +200,7 @@ def retrieve_user_info(user_name)
   info[:screen_name] = doc.elements["/user/screen_name"].text
   info[:user_real_name] = doc.elements["/user/name"].text
   info[:profile_image_url] = doc.elements["/user/profile_image_url"].text
+  info[:description] = doc.elements["/user/description"].text
   info
 end
 
