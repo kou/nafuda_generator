@@ -58,6 +58,18 @@ def make_surface(paper, scale, format, output, &block)
   end
 end
 
+def make_context(surface, scale)
+  context = Cairo::Context.new(surface)
+  context.scale(scale, scale)
+
+  context.save do
+    context.set_source_color(:white)
+    context.paint
+  end
+
+  context
+end
+
 def make_layout(context, text, width, height, font)
   layout = context.create_pango_layout
   layout.text = text
@@ -124,13 +136,7 @@ def render_to_surface_big(surface, scale, paper, info, font)
   margin = paper.width * 0.03
   image_width = image_height = paper.width * 0.3
 
-  context = Cairo::Context.new(surface)
-  context.scale(scale, scale)
-
-  context.set_source_color(:white)
-  context.paint
-
-  context.set_source_color(:black)
+  context = make_context(surface, scale)
 
   context.save do
     context.line_width = margin * 0.5
