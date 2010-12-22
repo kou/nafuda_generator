@@ -2,6 +2,6 @@
 
 require './app'
 
-# @@configurations[:rendering_mode] = :jigoku
+# @@configuration[:rendering_mode] = :jigoku
 
 run Sinatra::Application

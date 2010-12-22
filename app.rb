@@ -16,18 +16,18 @@ require 'fileutils'
 
 include ERB::Util
 
-@@configurations = {
+@@configuration = {
   :debug => false,
   :rendering_mode => :big,
 }
-@@configurations[:debug] = true if ENV["RACK_ENV"] == "development"
+@@configuration[:debug] = true if ENV["RACK_ENV"] == "development"
 
 def debug?
-  @@configurations[:debug]
+  @@configuration[:debug]
 end
 
 def rendering_mode
-  @@configurations[:rendering_mode]
+  @@configuration[:rendering_mode]
 end
 
 def jigoku?
