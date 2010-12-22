@@ -70,6 +70,14 @@ def make_context(surface, scale)
   context
 end
 
+def render_frame(context, paper, line_width)
+  context.save do
+    context.line_width = line_width
+    context.rectangle(0, 0, paper.width, paper.height)
+    context.stroke
+  end
+end
+
 def make_layout(context, text, width, height, font)
   layout = context.create_pango_layout
   layout.text = text
@@ -137,12 +145,7 @@ def render_to_surface_big(surface, scale, paper, info, font)
   image_width = image_height = paper.width * 0.3
 
   context = make_context(surface, scale)
-
-  context.save do
-    context.line_width = margin * 0.5
-    context.rectangle(0, 0, paper.width, paper.height)
-    context.stroke
-  end
+  render_frame(context, paper, margin * 0.5)
 
   name = prepare_real_name(info[:user_real_name])
   max_name_height = paper.height - image_height - margin * 3
