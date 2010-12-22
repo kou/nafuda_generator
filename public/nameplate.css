@@ -1,0 +1,48 @@
+div.description p
+{
+	margin: 0;
+}
+
+div.description em
+{
+	background-color: red;
+	border: 1px solid blue;
+}
+
+div.description img.sample
+{
+	float: left;
+	padding-right: 10px;
+	padding-bottom: 10px;
+}
+
+div.note
+{
+	clear: both;
+	margin-bottom: 10px;
+}
+
+div.note p
+{
+	margin: 0;
+	font-size: smaller;
+	color: #ccc;
+}
+
+div.thumbnail
+{
+	float: left;
+	text-align: center;
+	width: 150px;
+	height: 250px;
+}
+
+a img
+{
+	border-style: none;
+}
+
+hr
+{
+	clear: both;
+}

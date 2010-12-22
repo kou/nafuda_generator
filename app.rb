@@ -42,6 +42,10 @@ def prefix
   end
 end
 
+def description
+  erb(:description).force_encoding("ascii-8bit")
+end
+
 get '/' do
   erb :index
 end
@@ -243,6 +247,7 @@ def render_witticism(context, position, witticism, paper, margin, font)
     context.move_to(witticism_x, witticism_y)
     context.rotate(Math::PI / 2)
     context.line_width = 10
+    context.line_join = :bevel
     context.set_source_color(:white)
     context.pango_layout_path(layout)
     context.stroke
@@ -266,16 +271,18 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
   pixbuf = load_pixbuf(info)
   if pixbuf
     context.save do
+      x_ratio = (paper.width - 10) / pixbuf.width.to_f
+      y_ratio = (paper.height - 10) / pixbuf.height.to_f
       x_ratio = paper.width / pixbuf.width.to_f
       y_ratio = paper.height / pixbuf.height.to_f
       if x_ratio > y_ratio
-        translate_x = (paper.width - pixbuf.width) / 2.0
-        translate_y = 0
         x_ratio = y_ratio
+        translate_x = (paper.width - pixbuf.width * x_ratio) / 2.0
+        translate_y = 0
       else
-        translate_x = 0
-        translate_y = (paper.height - pixbuf.height) / 2.0
         y_ratio = x_ratio
+        translate_x = 0
+        translate_y = (paper.height - pixbuf.height * y_ratio) / 2.0
       end
       context.translate(translate_x, translate_y)
       context.scale(x_ratio, y_ratio)
@@ -289,7 +296,9 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
   description = prepare_jigoku_description(info[:description])
   right_witticism, left_witticism, garbages = description.split(/\n\n/, 3)
   render_witticism(context, :right, right_witticism, paper, margin, font)
-  render_witticism(context, :left, left_witticism, paper, margin, font)
+  if left_witticism
+    render_witticism(context, :left, left_witticism, paper, margin, font)
+  end
 
   screen_name = info[:screen_name]
   layout = make_layout(context,
@@ -299,8 +308,20 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
                        font) do |_layout|
     _layout.alignment = :center
   end
-  context.move_to(margin, paper.height - layout.pixel_size[1] - margin)
-  context.show_pango_layout(layout)
+  screen_name_x = margin
+  screen_name_y = paper.height - layout.pixel_size[1] - margin
+  context.save do
+    context.move_to(screen_name_x, screen_name_y)
+    context.line_width = 5
+    context.line_join = :bevel
+    context.set_source_color(:white)
+    context.pango_layout_path(layout)
+    context.stroke
+  end
+  context.save do
+    context.move_to(screen_name_x, screen_name_y)
+    context.show_pango_layout(layout)
+  end
 
   context.show_page
 end
