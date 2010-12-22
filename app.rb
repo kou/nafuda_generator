@@ -16,6 +16,16 @@ require 'fileutils'
 
 include ERB::Util
 
+@@configurations = {
+  :debug => false,
+  :rendering_mode => :big,
+}
+@@configurations[:debug] = true if ENV["RACK_ENV"] == "development"
+
+def debug?
+  @@configurations[:debug]
+end
+
 get '/' do
   erb :index
 end
@@ -43,7 +53,8 @@ def make_surface(paper, scale, format, output, &block)
       surface.write_to_png(output)
     end
   else
-    raise Sinatra::NotFound
+    raise "invalid format: #{format.inspect}" if debug?
+    not_found
   end
 end
 
@@ -52,7 +63,8 @@ def make_layout(context, text, width, height, font)
   layout.text = text
   layout.width = width * Pango::SCALE
   unless @@font_families.any? {|family| family == font}
-    raise Sinatra::NotFound
+    raise "failed to find font family: #{font.inspect}" if debug?
+    not_found
   end
   font_description = Pango::FontDescription.new
   font_description.family = font
@@ -227,7 +239,10 @@ end
 def prepare_font_name(name)
   if name.respond_to?(:force_encoding)
     name.force_encoding("UTF-8")
-    raise Sintara::NotFound unless name.valid_encoding?
+    unless name.valid_encoding?
+      raise "invalid encoding name: #{name.inspect}" if debug?
+      not_found
+    end
   end
   name
 end
@@ -243,7 +258,8 @@ get "/fonts/:font/thumbnails/:user.png" do
                       "fonts", font, "thumbnails", "#{user}.#{format}")
     nameplate
   rescue
-    raise Sinatra::NotFound
+    raise if debug?
+    not_found
   end
 end
 
@@ -261,7 +277,8 @@ get "/fonts/:font/:user" do
     cache_public_file(nameplate, "fonts", font, "#{user}.#{format}")
     nameplate
   rescue
-    raise Sinatra::NotFound
+    raise if debug?
+    not_found
   end
 end
 
@@ -287,6 +304,7 @@ get "/:user" do
     cache_putblic_file(nameplate, "#{user}.#{format}")
     nameplate
   rescue
-    raise Sinatra::NotFound
+    raise if debug?
+    not_found
   end
 end
