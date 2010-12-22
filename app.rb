@@ -99,7 +99,7 @@ def prepare_real_name(name)
   end
 end
 
-def render_to_surface(surface, scale, paper, info, font)
+def render_to_surface_big(surface, scale, paper, info, font)
   margin = paper.width * 0.03
   image_width = image_height = paper.width * 0.3
 
@@ -166,6 +166,11 @@ def render_to_surface(surface, scale, paper, info, font)
   end
 
   context.show_page
+end
+
+def render_to_surface(surface, scale, paper, info, font)
+  send("render_to_surface_#{@@configurations[:rendering_mode]}",
+       surface, scale, paper, info, font)
 end
 
 def user_info(user_name)
