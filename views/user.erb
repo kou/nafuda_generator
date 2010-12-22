@@ -3,6 +3,13 @@
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<title>名札には名前を大きく書きましょうジェネレータ</title>
 		<style>
+div.note
+{
+	font-size: smaller;
+	color: #ccc;
+	line-height: 80%;
+}
+
 div.thumbnail
 {
 	float: left;
@@ -32,7 +39,10 @@ hr
                                 <input type="submit" value="生成！" />
                         </form>
                 </p>
-                <p>注意: アカウント情報は1日くらいキャッシュしています。Twitter側の名前の変更やプロフィール画像の変更は1日くらい反映されません。（キャッシュしないとすぐにTwitter側から情報を取ってこれなくなるのです。）</p>
+		<div class="note">
+	                <p>注意: アカウント情報は1日くらいキャッシュしています。Twitter側の名前の変更やプロフィール画像の変更は1日くらい反映されません。</p>
+			<p>（キャッシュしないとすぐにTwitter側から情報を取ってこれなくなるのです。）</p>
+		</div>
 		<div id="thumbnails">
 		</div>
 <% @families.each_with_index do |name, i| %>
