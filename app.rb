@@ -220,10 +220,11 @@ def prepare_jigoku_description(description)
   end
 end
 
-def render_witticism(context, position, witticism, paper, margin, font)
+def render_witticism(context, position, witticism, paper,
+                     max_height, margin, font)
   layout = make_layout(context,
                        witticism,
-                       paper.height - margin * 2,
+                       max_height,
                        nil,
                        font) do |_layout|
     _layout.context.base_gravity = :east
@@ -289,18 +290,23 @@ def render_to_surface_jigoku(surface, scale, paper, info, font)
 
   render_frame(context, paper, margin * 0.5)
 
+  screen_name_max_height = paper.height * 0.1
+
   description = prepare_jigoku_description(info[:description])
   right_witticism, left_witticism, garbages = description.split(/\n\n/, 3)
-  render_witticism(context, :right, right_witticism, paper, margin, font)
+  max_witticism_height = paper.height - screen_name_max_height - margin * 2
+  render_witticism(context, :right, right_witticism, paper,
+                   max_witticism_height, margin, font)
   if left_witticism
-    render_witticism(context, :left, left_witticism, paper, margin, font)
+    render_witticism(context, :left, left_witticism, paper,
+                     max_witticism_height, margin, font)
   end
 
   screen_name = info[:screen_name]
   layout = make_layout(context,
                        "@#{screen_name}",
                        paper.width - margin * 2,
-                       paper.height * 0.1,
+                       screen_name_max_height,
                        font) do |_layout|
     _layout.alignment = :center
   end
