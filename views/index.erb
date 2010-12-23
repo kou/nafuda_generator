@@ -2,14 +2,20 @@
 	<head>
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 		<link rel="stylesheet" href="nameplate.css" type="text/css" media="all" />
-		<title><%= prefix %>名札には名前を大きく書きましょうジェネレータ</title>
+		<title><%= title %></title>
 	</head>
 	<body>
-		<h1><%= prefix %>名札には名前を大きく書きましょうジェネレータ</h1>
+		<h1><%= title %></h1>
 		<p>
 			<a href="http://rubykaigi.tdiary.net/20100815.html#p01" target="_blank">
 				名札には名前を大きく書きましょう
-			</a>のような名札画像を生成する<%= prefix %>ジェネレータ。
+			</a>
+			のような名札画像を生成するジェネレータ
+<% if jigoku? %>
+			は<a href="http://nameplate.clear-code.com/">こちら</a>
+<% else %>
+			。
+<% end %>
 		</p>
 		<p>
 			<form action="./" method="post">

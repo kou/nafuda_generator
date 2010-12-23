@@ -34,8 +34,8 @@ def jigoku?
   rendering_mode == :jigoku
 end
 
-def prefix
-  erb(:prefix).force_encoding("ascii-8bit").strip
+def title
+  erb(:title).force_encoding("ascii-8bit").strip
 end
 
 def description
