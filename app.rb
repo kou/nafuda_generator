@@ -229,7 +229,7 @@ def render_witticism(context, position, witticism, paper,
                        font) do |_layout|
     _layout.context.base_gravity = :east
     description = _layout.font_description
-    description.size = 14 * Pango::SCALE
+    description.size = 12 * Pango::SCALE
     _layout.font_description = description
   end
 
