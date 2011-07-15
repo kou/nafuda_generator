@@ -139,8 +139,8 @@ end
 
 def load_pixbuf(info)
   screen_name = info[:screen_name]
-  profile_image_url = info[:profile_image_url]
-  *profile_image_url_components = profile_image_url.split(/\//)
+  original_profile_image_url = info[:profile_image_url]
+  *profile_image_url_components = original_profile_image_url.split(/\//)
   profile_image_last_component = profile_image_url_components.last
   profile_image_url_components[-1] =
     u(profile_image_last_component.gsub(/_normal\.([a-zA-Z]+)\z/, '.\1'))
@@ -148,8 +148,14 @@ def load_pixbuf(info)
 
   extension = $1
   image_data = cache_file("images", "#{screen_name}.#{extension}") do
-    open(profile_image_url, "rb") do |image_file|
-      image_file.read
+    begin
+      open(profile_image_url, "rb") do |image_file|
+        image_file.read
+      end
+    rescue OpenURI::HTTPError
+      open(original_profile_image_url, "rb") do |image_file|
+        image_file.read
+      end
     end
   end
   loader = Gdk::PixbufLoader.new
